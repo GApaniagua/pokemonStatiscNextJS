@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { localFavorites } from "../../utils";
 import confetti from "canvas-confetti";
 import { getPokemonInfo } from "../../utils/getPokemonInfo";
+import { redirect } from "next/dist/server/api-utils";
 
 interface props {
   pokemon: any;
@@ -111,7 +112,7 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
 
   return {
     paths: pokemons.map((id) => ({ params: { id } })),
-    fallback: false,
+    fallback: "blocking",
   };
 };
 
@@ -120,8 +121,18 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 
   const pokemon = await getPokemonInfo(id);
 
+  if (!pokemon) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
   return {
     props: { pokemon },
+    revalidate: 86400,
   };
 };
 
